@@ -1047,6 +1047,9 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
 	case NL80211_IFTYPE_STATION:
 		hvif.opmode = HTC_M_STA;
 		break;
+	case NL80211_IFTYPE_OCB:
+		hvif.opmode = HTC_M_MONITOR;
+		break;
 	case NL80211_IFTYPE_ADHOC:
 		hvif.opmode = HTC_M_IBSS;
 		break;
