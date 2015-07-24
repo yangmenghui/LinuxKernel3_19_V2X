@@ -1028,16 +1028,23 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
 			    "Failed to initialize rate control algorithm\n");
 		goto fail_rate;
 	}
-
+	/* add one default OCB interface if supported */
+	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_OCB)) {
+		result = ieee80211_if_add(local, "wlan%d", NULL,
+					  NL80211_IFTYPE_OCB, NULL);
+	}
 	/* add one default STA interface if supported */
-	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION) &&
+	else if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION) &&
 	    !(hw->flags & IEEE80211_HW_NO_AUTO_VIF)) {
 		result = ieee80211_if_add(local, "wlan%d", NULL,
 					  NL80211_IFTYPE_STATION, NULL);
-		if (result)
-			wiphy_warn(local->hw.wiphy,
-				   "Failed to add default virtual iface\n");
+	//	if (result)
+	//		wiphy_warn(local->hw.wiphy,
+	//			   "Failed to add default virtual iface\n");
 	}
+	if (result)
+		wiphy_warn(local->hw.wiphy, "Failed to add default virtual iface\n");
+
 
 	rtnl_unlock();
 

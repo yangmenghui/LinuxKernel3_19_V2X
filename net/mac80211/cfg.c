@@ -522,6 +522,40 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
 	return ret;
 }
 
+/* Copied from ieee80211_set_monitor_channel */
+
+static int ieee80211_set_ocb_channel(struct wiphy *wiphy,
+					 struct cfg80211_chan_def *chandef)
+{
+	struct ieee80211_local *local = wiphy_priv(wiphy);
+	struct ieee80211_sub_if_data *sdata;
+	int ret = 0;
+	mutex_lock(&local->iflist_mtx);
+	//if (local->use_chanctx) {
+	//	sdata = rcu_dereference_protected(
+	//			local->monitor_sdata,
+	//			lockdep_is_held(&local->iflist_mtx));
+	//	if (sdata) {
+	//		ieee80211_vif_release_channel(sdata);
+	//		ret = ieee80211_vif_use_channel(sdata, chandef,
+	//				IEEE80211_CHANCTX_EXCLUSIVE);
+	//	}
+	//} else if (local->open_count == local->monitors) {
+	//	printk("%s: local->use_chanctx != TRUE\n", __func__);
+		/* FIXME
+		 * I know this is wrong but how do I obtain the sdata?
+		 */
+		local->_oper_chandef = *chandef;
+		ieee80211_hw_config(local, 0);
+	//}
+	//if (ret == 0)
+	//	local->monitor_chandef = *chandef;
+	mutex_unlock(&local->iflist_mtx);
+	return ret;
+}
+
+
+
 static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
 					 struct cfg80211_chan_def *chandef)
 {
@@ -3551,9 +3585,11 @@ static int ieee80211_cfg_get_channel(struct wiphy *wiphy,
 	if (chanctx_conf) {
 		*chandef = sdata->vif.bss_conf.chandef;
 		ret = 0;
-	} else if (local->open_count > 0 &&
+	} else if ((local->open_count > 0 &&
 		   local->open_count == local->monitors &&
-		   sdata->vif.type == NL80211_IFTYPE_MONITOR) {
+		   (sdata->vif.type == NL80211_IFTYPE_MONITOR)) 
+                    || sdata->vif.type == NL80211_IFTYPE_OCB)
+	 {
 		if (local->use_chanctx)
 			*chandef = local->monitor_chandef;
 		else
@@ -3720,6 +3756,7 @@ const struct cfg80211_ops mac80211_config_ops = {
 	.change_bss = ieee80211_change_bss,
 	.set_txq_params = ieee80211_set_txq_params,
 	.set_monitor_channel = ieee80211_set_monitor_channel,
+	.set_ocb_channel = ieee80211_set_ocb_channel,
 	.suspend = ieee80211_suspend,
 	.resume = ieee80211_resume,
 	.scan = ieee80211_scan,

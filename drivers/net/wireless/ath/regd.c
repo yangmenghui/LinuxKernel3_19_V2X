@@ -341,6 +341,8 @@ ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
 	struct ieee80211_channel *ch;
 	unsigned int i;
 
+//	u32 bandwidth = 0;
+
 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
 		if (!wiphy->bands[band])
 			continue;

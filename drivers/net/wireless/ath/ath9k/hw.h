@@ -71,7 +71,8 @@
 
 #define ATH9K_RSSI_BAD			-128
 
-#define ATH9K_NUM_CHANNELS	38
+//#define ATH9K_NUM_CHANNELS	38
+#define ATH9K_NUM_CHANNELS    54 //add by yaoming
 
 /* Register read/write primitives */
 #define REG_WRITE(_ah, _reg, _val) \

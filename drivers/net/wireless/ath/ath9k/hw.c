@@ -1187,6 +1187,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
 	u32 set = AR_STA_ID1_KSRCH_MODE;
 
 	switch (opmode) {
+	case NL80211_IFTYPE_OCB:
 	case NL80211_IFTYPE_ADHOC:
 		if (!AR_SREV_9340_13(ah)) {
 			set |= AR_STA_ID1_ADHOC;

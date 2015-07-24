@@ -1044,6 +1044,12 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
 	rx_status->antenna = rx_stats.rs_antenna;
 	rx_status->flag |= RX_FLAG_MACTIME_END;
 
+	if (IS_CHAN_HALF_RATE(priv->ah->curchan))
+		rx_status->flag |= RX_FLAG_10MHZ;
+	else if (IS_CHAN_QUARTER_RATE(priv->ah->curchan))
+		rx_status->flag |= RX_FLAG_5MHZ;
+
+
 	return true;
 rx_next:
 	return false;

@@ -911,6 +911,9 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
 		case NL80211_IFTYPE_AP:
 			cfg80211_stop_ap(rdev, dev, true);
 			break;
+		//add by yaoming maybe error
+		case NL80211_IFTYPE_OCB:
+			/*fall through*/
 		case NL80211_IFTYPE_ADHOC:
 			cfg80211_leave_ibss(rdev, dev, false);
 			break;

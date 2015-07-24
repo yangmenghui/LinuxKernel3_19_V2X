@@ -132,6 +132,7 @@ enum ieee80211_channel_flags {
 	IEEE80211_CHAN_GO_CONCURRENT	= 1<<10,
 	IEEE80211_CHAN_NO_20MHZ		= 1<<11,
 	IEEE80211_CHAN_NO_10MHZ		= 1<<12,
+	IEEE80211_CHAN_OCB_ONLY		= 1<<13, //add by yaoming
 };
 
 #define IEEE80211_CHAN_NO_HT40 \
@@ -378,6 +379,10 @@ static inline enum nl80211_channel_type
 cfg80211_get_chandef_type(const struct cfg80211_chan_def *chandef)
 {
 	switch (chandef->width) {
+	case NL80211_CHAN_WIDTH_5:
+		return NL80211_CHAN_5MHZ;
+	case NL80211_CHAN_WIDTH_10:
+		return NL80211_CHAN_10MHZ;
 	case NL80211_CHAN_WIDTH_20_NOHT:
 		return NL80211_CHAN_NO_HT;
 	case NL80211_CHAN_WIDTH_20:
@@ -2525,9 +2530,11 @@ struct cfg80211_ops {
 	int	(*libertas_set_mesh_channel)(struct wiphy *wiphy,
 					     struct net_device *dev,
 					     struct ieee80211_channel *chan);
-
+	 
 	int	(*set_monitor_channel)(struct wiphy *wiphy,
 				       struct cfg80211_chan_def *chandef);
+	int     (*set_ocb_channel)(struct wiphy *wiphy,struct cfg80211_chan_def *chandef);   
+
 
 	int	(*scan)(struct wiphy *wiphy,
 			struct cfg80211_scan_request *request);
@@ -3845,6 +3852,8 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
  */
 const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
 					       u32 center_freq);
+//						u32 center_freq,
+//						u32 desired_bw_khz); //add by yaoming
 
 /**
  * reg_initiator_name - map regulatory request initiator enum to name

@@ -557,6 +557,8 @@ enum mac80211_tx_info_flags {
  */
 enum mac80211_tx_control_flags {
 	IEEE80211_TX_CTRL_PORT_CTRL_PROTO	= BIT(0),
+	IEEE80211_TX_CTL_10MHZ			= BIT(1), //add by yaoming
+	IEEE80211_TX_CTL_5MHZ			= BIT(2), //add by yaoming
 };
 
 /*
@@ -4953,6 +4955,7 @@ static inline bool
 conf_is_ht20(struct ieee80211_conf *conf)
 {
 	return conf->chandef.width == NL80211_CHAN_WIDTH_20;
+//	return conf_is_ht20(conf) || conf_is_ht40(conf);//add by yaoming
 }
 
 static inline bool

@@ -814,6 +814,17 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
 }
 EXPORT_SYMBOL(cfg80211_reg_can_beacon);
 
+//add by yaoming
+int cfg80211_set_ocb_channel(struct cfg80211_registered_device *rdev,
+			     struct wireless_dev *wdev,
+			     struct cfg80211_chan_def *chandef)
+{
+	if (!rdev->ops->set_ocb_channel)
+		return -EOPNOTSUPP;
+	return rdev_set_ocb_channel(rdev, chandef);
+}
+
+
 int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
 				 struct cfg80211_chan_def *chandef)
 {

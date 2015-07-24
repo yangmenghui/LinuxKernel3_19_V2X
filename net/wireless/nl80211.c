@@ -1892,6 +1892,7 @@ static bool nl80211_can_set_dev_channel(struct wireless_dev *wdev)
 	 * operation to set the monitor channel if possible.
 	 */
 	return !wdev ||
+		wdev->iftype == NL80211_IFTYPE_OCB ||
 		wdev->iftype == NL80211_IFTYPE_AP ||
 		wdev->iftype == NL80211_IFTYPE_MESH_POINT ||
 		wdev->iftype == NL80211_IFTYPE_MONITOR ||
@@ -2015,6 +2016,9 @@ static int __nl80211_set_channel(struct cfg80211_registered_device *rdev,
 		break;
 	case NL80211_IFTYPE_MONITOR:
 		result = cfg80211_set_monitor_channel(rdev, &chandef);
+		break;
+	case NL80211_IFTYPE_OCB:
+		result = cfg80211_set_ocb_channel(rdev, wdev, &chandef);
 		break;
 	default:
 		result = -EINVAL;

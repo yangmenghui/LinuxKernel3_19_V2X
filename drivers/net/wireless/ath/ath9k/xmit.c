@@ -2446,6 +2446,12 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 	if (!(tx_flags & ATH_TX_ERROR))
 		/* Frame was ACKed */
 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
+	//added by yaoming
+	if (IS_CHAN_HALF_RATE(sc->sc_ah->curchan))
+		tx_info->flags |= IEEE80211_TX_CTL_10MHZ;
+	else if (IS_CHAN_QUARTER_RATE(sc->sc_ah->curchan))
+		tx_info->flags |= IEEE80211_TX_CTL_5MHZ;
+
 
 	padpos = ieee80211_hdrlen(hdr->frame_control);
 	padsize = padpos & 3;

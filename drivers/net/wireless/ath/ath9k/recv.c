@@ -408,7 +408,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
 	    (sc->cur_chan->nvifs <= 1) &&
 	    !(sc->cur_chan->rxfilter & FIF_BCN_PRBRESP_PROMISC))
 		rfilt |= ATH9K_RX_FILTER_MYBEACON;
-	else
+	else if (sc->sc_ah->opmode != NL80211_IFTYPE_OCB) //added by yaoming
 		rfilt |= ATH9K_RX_FILTER_BEACON;
 
 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
@@ -1051,6 +1051,12 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
 
 		retval = ath9k_rx_skb_preprocess(sc, hdr_skb, &rs, rxs,
 						 &decrypt_error, tsf);
+		if (IS_CHAN_HALF_RATE(ah->curchan))
+			rxs->flag |= RX_FLAG_10MHZ;
+		else if (IS_CHAN_QUARTER_RATE(ah->curchan))
+			rxs->flag |= RX_FLAG_5MHZ;
+	
+
 		if (retval)
 			goto requeue_drop_frag;
 
