@@ -109,7 +109,10 @@ static u32 __ieee80211_recalc_idle(struct ieee80211_local *local,
 
 	active = force_active ||
 		 !list_empty(&local->chanctx_list) ||
-		 local->monitors;
+	//	 local->monitors;
+		 local->monitors ||
+		 local->ocbs;
+	printk(" ###  %s: active: %d; local->ocbs: %d\n", __func__, active, local->ocbs);
 
 	working = !local->ops->remain_on_channel &&
 		  !list_empty(&local->roc_list);
@@ -488,6 +491,7 @@ void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
  */
 int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
 {
+	printk("%s:%s\n",__FILE__,__FUNCTION__);
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
 	struct net_device *dev = wdev->netdev;
 	struct ieee80211_local *local = sdata->local;
@@ -495,7 +499,7 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
 	u32 changed = 0;
 	int res;
 	u32 hw_reconf_flags = 0;
-
+	printk("%s:%s sdata->vif.type = %d \n",__FILE__,__FUNCTION__,sdata->vif.type);
 	switch (sdata->vif.type) {
 	case NL80211_IFTYPE_WDS:
 		if (!is_valid_ether_addr(sdata->u.wds.remote_addr))
@@ -544,6 +548,7 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
 	}
 
 	if (local->open_count == 0) {
+		printk("%s:%s:%d\n",__FILE__,__FUNCTION__,__LINE__);
 		res = drv_start(local);
 		if (res)
 			goto err_del_bss;
@@ -569,7 +574,7 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
 			goto err_stop;
 		}
 	}
-
+    
 	switch (sdata->vif.type) {
 	case NL80211_IFTYPE_AP_VLAN:
 		/* no need to tell driver, but set carrier and chanctx */
@@ -612,12 +617,15 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
 		netif_carrier_on(dev);
 		break;
 	default:
+	//	printk("%s:%s\n",__FILE__,__FUNCTION__);
 		if (coming_up) {
+			printk("%s:%s:%d\n",__FILE__,__FUNCTION__,__LINE__);
 			ieee80211_del_virtual_monitor(local);
 
 			res = drv_add_interface(local, sdata);
 			if (res)
 				goto err_stop;
+			printk("%s:%s:%d\n",__FILE__,__FUNCTION__,__LINE__);
 			res = ieee80211_check_queues(sdata,
 				ieee80211_vif_type_p2p(&sdata->vif));
 			if (res)
@@ -635,6 +643,39 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
 
 		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE)
 			changed |= ieee80211_reset_erp_info(sdata);
+		
+		if (sdata->vif.type == NL80211_IFTYPE_OCB) {
+			printk("goto... locla->ocbs++\n");
+			local->ocbs++;
+
+			/* Disable beacons */
+			sdata->vif.bss_conf.enable_beacon = false;
+			changed |= BSS_CHANGED_BEACON;
+
+			/*
+			 * Disable idle -- when chanctx will be used,
+			 * this will be unnecessary
+			 */
+			sdata->vif.bss_conf.idle = false;
+			changed |= BSS_CHANGED_IDLE;
+
+			/* Receive all data frames */
+			local->fif_other_bss++;
+			ieee80211_configure_filter(local);
+
+			mutex_lock(&local->mtx);
+			ieee80211_recalc_idle(local);
+			mutex_unlock(&local->mtx);
+
+			netif_carrier_on(dev);
+
+			if (netif_carrier_ok(dev))
+				printk(" netif  carrier ok!\n");
+			
+		}
+
+
+		
 		ieee80211_bss_info_change_notify(sdata, changed);
 
 		switch (sdata->vif.type) {
@@ -642,9 +683,9 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
 		case NL80211_IFTYPE_ADHOC:
 		case NL80211_IFTYPE_AP:
 		case NL80211_IFTYPE_MESH_POINT:
-		case NL80211_IFTYPE_OCB:
 			netif_carrier_off(dev);
 			break;
+		case NL80211_IFTYPE_OCB:
 		case NL80211_IFTYPE_WDS:
 		case NL80211_IFTYPE_P2P_DEVICE:
 			break;
@@ -762,6 +803,7 @@ static int ieee80211_open(struct net_device *dev)
 		return -EADDRNOTAVAIL;
 
 	err = ieee80211_check_concurrent_iface(sdata, sdata->vif.type);
+	printk("%s:%s  err = %d\n",__FILE__,__FUNCTION__,err);
 	if (err)
 		return err;
 
@@ -932,6 +974,13 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
 
 		ieee80211_adjust_monitor_flags(sdata, -1);
 		break;
+	case NL80211_IFTYPE_OCB:
+		local->ocbs--;
+		if (local->ocbs == 0) {
+			/* Do some cleaning */
+		}
+		break;
+	
 	case NL80211_IFTYPE_P2P_DEVICE:
 		/* relies on synchronize_rcu() below */
 		RCU_INIT_POINTER(local->p2p_sdata, NULL);

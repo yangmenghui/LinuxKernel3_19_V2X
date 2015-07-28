@@ -3244,6 +3244,7 @@ static bool prepare_for_handlers(struct ieee80211_rx_data *rx,
 		}
 		break;
 	case NL80211_IFTYPE_OCB:
+		printk("goto OCB type.....\n");
 		if (!bssid)
 			return false;
 		if (ieee80211_is_beacon(hdr->frame_control)) {
@@ -3378,6 +3379,7 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
 static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
 					 struct sk_buff *skb)
 {
+	printk("%s:%s....\n",__FILE__,__FUNCTION__);
 	struct ieee80211_local *local = hw_to_local(hw);
 	struct ieee80211_sub_if_data *sdata;
 	struct ieee80211_hdr *hdr;
